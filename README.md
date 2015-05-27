@@ -2,8 +2,8 @@
 This is a Java based modular input to connect your Carvoyant account to your Splunk server.
 
 ## Prerequisites
-Java 1.7+
-Maven2
+* Java 1.7+
+* Maven2
 
 ## Installation
 1. Clone from git
