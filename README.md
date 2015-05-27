@@ -8,7 +8,7 @@ This is a Java based modular input to connect your Carvoyant account to your Spl
 ## Installation
 1. Clone from git
 2. Run a Maven package (ie, "mvn package")
-3. Unpack the target/CarvoyantModularInput-<release>.tar.gz package into your $SPLUNK_HOME/etc/apps directory
+3. Unpack the target/CarvoyantModularInput-{release}.tar.gz package into your $SPLUNK_HOME/etc/apps directory
 4. Restart your Splunk server
 
 If you don't want to build from source, you can use one of the pre-build tarballs from the [releases](https://github.com/carvoyant/carvoyant-splunk-modular-input/tree/master/releases) directory on GitHub.
