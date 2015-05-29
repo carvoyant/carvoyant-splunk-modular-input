@@ -23,6 +23,7 @@
 			<includes>
 				<include>darwin_x86_64</include>
 				<include>default</include>
+				<include>metadata</include>
 				<include>linux_x86</include>
 				<include>linux_x86_64</include>
 				<include>windows_x86</include>
@@ -35,6 +36,7 @@
 			<includes>
 				<include>darwin_x86_64/**/*</include>
 				<include>default/**/*</include>
+				<include>metadata/**/*</include>
 				<include>linux_x86/**/*</include>
 				<include>linux_x86_64/**/*</include>
 				<include>windows_x86/**/*</include>
