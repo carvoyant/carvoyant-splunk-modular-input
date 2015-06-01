@@ -26,6 +26,33 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-dependencies</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>com.splunk</groupId>
+									<artifactId>splunk</artifactId>
+									<version>1.4.0.0</version>
+									<type>jar</type>
+								</artifactItem>
+							</artifactItems>
+							<outputDirectory>${project.build.directory}/lib</outputDirectory>
+							<overWriteReleases>false</overWriteReleases>
+							<overWriteSnapshots>false</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
 					<descriptor>src/resources/assembly-modularInput.xml</descriptor>
@@ -55,9 +82,21 @@
 			<artifactId>maven-assembly-plugin</artifactId>
 			<version>2.5.4</version>
 			<type>maven-plugin</type>
-			<scope>runtime</scope>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.splunk</groupId>
+			<artifactId>splunk</artifactId>
+			<version>1.4.0.0</version>
 		</dependency>
 	</dependencies>
+	<repositories>
+		<repository>
+			<id>splunk-artifactory</id>
+			<name>Splunk Releases</name>
+			<url>http://splunk.artifactoryonline.com/splunk/ext-releases-local</url>
+		</repository>
+	</repositories>
 	<name>carvoyant-splunk-modular-input</name>
 	<url>https://github.com/carvoyant/carvoyant-splunk-modular-input</url>
 	<description>This is a modular input that can be installed in Splunk to pull your Carvoyant data into your Splunk system.</description>

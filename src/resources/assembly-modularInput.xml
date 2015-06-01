@@ -57,9 +57,14 @@
 	</fileSets>
 	<files>
 		<file>
-			<source>target/${pom.artifactId}-${pom.version}.jar</source>
+			<source>${project.build.directory}/${pom.artifactId}-${pom.version}.jar</source>
 			<outputDirectory>jars</outputDirectory>
 			<destName>carvoyantModularInput.jar</destName>
+			<fileMode>0640</fileMode>
+		</file>
+		<file>
+			<source>${project.build.directory}/lib/splunk-1.4.0.0.jar</source>
+			<outputDirectory>jars</outputDirectory>
 			<fileMode>0640</fileMode>
 		</file>
 	</files>

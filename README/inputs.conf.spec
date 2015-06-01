@@ -4,3 +4,4 @@ clientSecret = <value>
 token = <value>
 refreshToken = <value>
 expirationDate = <value>
+

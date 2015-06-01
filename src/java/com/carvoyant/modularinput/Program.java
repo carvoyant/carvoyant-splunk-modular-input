@@ -17,13 +17,11 @@
 package com.carvoyant.modularinput;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLEncoder;
@@ -33,6 +31,7 @@ import java.text.SimpleDateFormat;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -42,6 +41,10 @@ import javax.xml.stream.XMLStreamException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.splunk.Input;
+import com.splunk.InputCollection;
+import com.splunk.Service;
+import com.splunk.ServiceArgs;
 import com.splunk.modularinput.Argument;
 import com.splunk.modularinput.Event;
 import com.splunk.modularinput.EventWriter;
@@ -63,36 +66,45 @@ public class Program extends Script {
 		Scheme scheme = new Scheme("Carvoyant Modular Input");
 		scheme.setDescription("Generates events containing Carvoyant vehicle information. Events will be generated from future Carvoyant data. Data in the Carvoyant system from prior to the creation of this input will not be transferred.");
 
-		Argument clientId = new Argument("clientId", "Client Id");
+		// Argument clientId = new Argument("clientId", "Client Id");
+		Argument clientId = new Argument("clientId");
 		clientId.setDescription("The Carvoyant Client Id for your Carvoyant developer account.");
 		clientId.setDataType(Argument.DataType.STRING);
 		clientId.setRequiredOnCreate(true);
 		clientId.setRequiredOnEdit(true);
 		scheme.addArgument(clientId);
 
-		Argument clientSecret = new Argument("clientSecret", "Client Secret");
+		// Argument clientSecret = new Argument("clientSecret",
+		// "Client Secret");
+		Argument clientSecret = new Argument("clientSecret");
 		clientSecret.setDescription("The secret for the above Client Id.");
 		clientSecret.setDataType(Argument.DataType.STRING);
 		clientSecret.setRequiredOnCreate(true);
 		clientSecret.setRequiredOnEdit(true);
 		scheme.addArgument(clientSecret);
 
-		Argument tokenArgument = new Argument("token", "Access Token");
+		// Argument tokenArgument = new Argument("token", "Access Token");
+		Argument tokenArgument = new Argument("token");
 		tokenArgument.setDescription("The Carvoyant Access Token for your account (generated with the same Client Id specified above).");
 		tokenArgument.setDataType(Argument.DataType.STRING);
 		tokenArgument.setRequiredOnCreate(true);
 		tokenArgument.setRequiredOnEdit(true);
 		scheme.addArgument(tokenArgument);
 
-		Argument refreshTokenArgument = new Argument("refreshToken", "Refresh Token");
+		// Argument refreshTokenArgument = new Argument("refreshToken",
+		// "Refresh Token");
+		Argument refreshTokenArgument = new Argument("refreshToken");
 		refreshTokenArgument.setDescription("The Carvoyant Refresh Token for the above Access Token.");
 		refreshTokenArgument.setDataType(Argument.DataType.STRING);
 		refreshTokenArgument.setRequiredOnCreate(true);
 		refreshTokenArgument.setRequiredOnEdit(true);
 		scheme.addArgument(refreshTokenArgument);
 
-		Argument expirationDate = new Argument("expirationDate", "Expiration Date (milliseconds from epoch)");
+		// Argument expirationDate = new Argument("expirationDate",
+		// "Expiration Date (milliseconds from epoch)");
+		Argument expirationDate = new Argument("expirationDate");
 		expirationDate.setDescription("The expiration date of the Carvoyant Access Token. The modular input will manage this value.");
+		expirationDate.setDataType(Argument.DataType.STRING);
 		expirationDate.setRequiredOnCreate(true);
 		expirationDate.setRequiredOnEdit(true);
 		scheme.addArgument(expirationDate);
@@ -104,123 +116,33 @@ public class Program extends Script {
 	public void streamEvents(InputDefinition inputs, EventWriter ew) throws MalformedDataException, XMLStreamException, IOException {
 
 		for (String inputName : inputs.getInputs().keySet()) {
-
 			String clientId = ((SingleValueParameter) inputs.getInputs().get(inputName).get("clientId")).getValue();
 			String clientSecret = ((SingleValueParameter) inputs.getInputs().get(inputName).get("clientSecret")).getValue();
 			String token = ((SingleValueParameter) inputs.getInputs().get(inputName).get("token")).getValue();
 			String refreshToken = ((SingleValueParameter) inputs.getInputs().get(inputName).get("refreshToken")).getValue();
 
 			SingleValueParameter expDate = (SingleValueParameter) inputs.getInputs().get(inputName).get("expirationDate");
-			long expirationDate = 0;
-
-			if (expDate != null) {
-				expirationDate = expDate.getLong();
-			}
-
+			long expirationDate = expDate.getLong();
 			long expirationWindow = TimeUnit.DAYS.toMillis(1);
 			long currentTime = System.currentTimeMillis();
 
+			// If the access token is going to expire, then refresh it
 			if ((expirationDate - currentTime) < expirationWindow) {
-				BufferedReader in = null;
+				JSONObject tokenJson = getRefreshToken(ew, clientId, clientSecret, refreshToken);
 
-				try {
-					// Refresh token
-					URL url = new URL("https://api.carvoyant.com/oauth/token");
-					HttpsURLConnection urlConnection = (HttpsURLConnection) url.openConnection();
-					urlConnection.setReadTimeout(10000);
-					urlConnection.setConnectTimeout(15000);
-					urlConnection.setRequestMethod("POST");
-					urlConnection.setDoInput(true);
-					urlConnection.setDoOutput(true);
+				if (tokenJson != null) {
+					token = tokenJson.getString("access_token");
+					refreshToken = tokenJson.getString("refresh_token");
+					int ttl = tokenJson.getInt("expires_in");
+					expirationDate = System.currentTimeMillis() + (long) ttl * 1000;
 
-					List<SimpleEntry> params = new ArrayList<SimpleEntry>();
-					params.add(new SimpleEntry("client_id", clientId));
-					params.add(new SimpleEntry("client_secret", clientSecret));
-					params.add(new SimpleEntry("grant_type", "refresh_token"));
-					params.add(new SimpleEntry("refresh_token", refreshToken));
-
-					String userpass = clientId + ":" + clientSecret;
-					String basicAuth = "Basic " + javax.xml.bind.DatatypeConverter.printBase64Binary(userpass.getBytes());
-
-					urlConnection.setRequestProperty("Authorization", basicAuth);
-
-					OutputStream os = urlConnection.getOutputStream();
-					BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, "UTF-8"));
-					writer.write(getQuery(params));
-					writer.flush();
-					writer.close();
-					os.close();
-
-					urlConnection.connect();
-
-					if (urlConnection.getResponseCode() < 400) {
-						in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-						String inputLine;
-						while ((inputLine = in.readLine()) != null) {
-							JSONObject obj = new JSONObject(inputLine);
-							token = obj.getString("access_token");
-							refreshToken = obj.getString("refresh_token");
-							int ttl = obj.getInt("expires_in");
-							expirationDate = System.currentTimeMillis() + (long) ttl * 1000;
-
-							// Set Splunk variables through their API
-							String[] inputNameArray = inputName.split("://");
-							URL urlupdate = new URL(inputs.getServerUri() + "/servicesNS/nobody/launcher/data/inputs/" + URLEncoder.encode(inputNameArray[0], "UTF-8") + "/"
-									+ URLEncoder.encode(inputNameArray[1], "UTF-8"));
-							HttpURLConnection urlConnectionUpdate = (HttpURLConnection) urlupdate.openConnection();
-							urlConnectionUpdate.setReadTimeout(10000);
-							urlConnectionUpdate.setConnectTimeout(15000);
-							urlConnectionUpdate.setRequestMethod("POST");
-							urlConnectionUpdate.setDoInput(true);
-							urlConnectionUpdate.setDoOutput(true);
-
-							List<SimpleEntry> paramsUpdate = new ArrayList<SimpleEntry>();
-							paramsUpdate.add(new SimpleEntry("clientId", clientId));
-							paramsUpdate.add(new SimpleEntry("clientSecret", clientSecret));
-							paramsUpdate.add(new SimpleEntry("token", token));
-							paramsUpdate.add(new SimpleEntry("refreshToken", refreshToken));
-							paramsUpdate.add(new SimpleEntry("expirationDate", expirationDate));
-
-							urlConnectionUpdate.setRequestProperty("Authorization", "Splunk " + inputs.getSessionKey());
-
-							OutputStream osUpdate = urlConnectionUpdate.getOutputStream();
-							BufferedWriter writerUpdate = new BufferedWriter(new OutputStreamWriter(osUpdate, "UTF-8"));
-							writerUpdate.write(getQuery(paramsUpdate));
-							writerUpdate.flush();
-							writerUpdate.close();
-							osUpdate.close();
-
-							urlConnectionUpdate.connect();
-							BufferedReader inUpdate = null;
-							if (urlConnectionUpdate.getResponseCode() < 400) {
-								inUpdate = new BufferedReader(new InputStreamReader(urlConnectionUpdate.getInputStream()));
-								String inputLineUpdate;
-								while ((inputLineUpdate = inUpdate.readLine()) != null) {
-									ew.synchronizedLog(EventWriter.INFO, inputLineUpdate);
-								}
-							} else {
-								inUpdate = new BufferedReader(new InputStreamReader(urlConnectionUpdate.getErrorStream()));
-								String inputLineUpdate;
-								while ((inputLineUpdate = inUpdate.readLine()) != null) {
-									ew.synchronizedLog(EventWriter.ERROR, inputName + " Splunk Update Error: " + inputLineUpdate);
-								}
-							}
-						}
-					} else {
-						in = new BufferedReader(new InputStreamReader(urlConnection.getErrorStream()));
-						String inputLine;
-						while ((inputLine = in.readLine()) != null) {
-							ew.synchronizedLog(EventWriter.ERROR, inputName + " Carvoyant Refresh Token Error: " + inputLine);
-						}
-					}
-
-					in.close();
-					urlConnection.disconnect();
-
-				} catch (IOException e) {
-					ew.synchronizedLog(EventWriter.INFO, inputName + " tokenException: " + e.toString());
+					// Update this configuration with the new settings
+					String[] splunkApiInputName = inputName.split("://");
+					updateInput(ew, inputs.getSessionKey(), splunkApiInputName[1], clientId, clientSecret, token, refreshToken, expirationDate);
+				} else {
+					ew.synchronizedLog(EventWriter.ERROR, "Cannot refresh token for " + inputName);
+					throw new XMLStreamException("Could not refresh the token for " + inputName);
 				}
-
 			}
 
 			// Get Carvoyant Data
@@ -253,13 +175,100 @@ public class Program extends Script {
 				}
 				in.close();
 			} catch (IOException ioe) {
-				ew.synchronizedLog(EventWriter.ERROR, inputName + " error: " + ioe.toString());
+				throw new XMLStreamException("Could not retrieve Carvoyant Data", ioe);
 			} catch (ParseException pe) {
-				ew.synchronizedLog(EventWriter.ERROR, inputName + " error: " + pe.toString());
-			} catch (MalformedDataException e) {
-				ew.synchronizedLog(EventWriter.ERROR, "MalformedDataException in writing event to input" + inputName + ": " + e.toString());
+				throw new XMLStreamException("Could not parse Carvoyant Data", pe);
 			}
 		}
+	}
+
+	// Updates the specified carvoyantModularInput through using the Splunk SDK
+	private void updateInput(EventWriter ew, String sessionKey, String inputName, String clientId, String clientSecret, String token, String refreshToken, long expirationDate) {
+		ServiceArgs sa = new ServiceArgs();
+		sa.setHost("127.0.0.1");
+		sa.setPort(8089);
+		sa.setScheme("https");
+		sa.setToken("Splunk " + sessionKey);
+		Service service = Service.connect(sa);
+		
+		// When authenticating using an existing session key, the Service object does
+		// not initialize properly, so manually set the version.
+		service.version = service.getInfo().getVersion();
+		
+		InputCollection inputs = service.getInputs();
+		for (Input input : inputs.values()) {
+			if (input.getKind().toString().equals("carvoyantModularInput") && input.getName().equals(inputName)) {
+				
+				HashMap<String, Object> params = new HashMap<String, Object>();
+				params.put("clientId",  clientId);
+				params.put("clientSecret",  clientSecret);
+				params.put("token",  token);
+				params.put("refreshToken",  refreshToken);
+				params.put("expirationDate", expirationDate);
+				
+				input.update(params);
+			}
+		}
+	}
+
+	private JSONObject getRefreshToken(EventWriter ew, String clientId, String clientSecret, String refreshToken) {
+		JSONObject tokenJson = null;
+		HttpsURLConnection getTokenConnection = null;
+
+		try {
+			BufferedReader tokenResponseReader = null;
+			URL url = new URL("https://api.carvoyant.com/oauth/token");
+			getTokenConnection = (HttpsURLConnection) url.openConnection();
+			getTokenConnection.setReadTimeout(30000);
+			getTokenConnection.setConnectTimeout(30000);
+			getTokenConnection.setRequestMethod("POST");
+			getTokenConnection.setDoInput(true);
+			getTokenConnection.setDoOutput(true);
+
+			List<SimpleEntry> getTokenParams = new ArrayList<SimpleEntry>();
+			getTokenParams.add(new SimpleEntry("client_id", clientId));
+			getTokenParams.add(new SimpleEntry("client_secret", clientSecret));
+			getTokenParams.add(new SimpleEntry("grant_type", "refresh_token"));
+			getTokenParams.add(new SimpleEntry("refresh_token", refreshToken));
+
+			String userpass = clientId + ":" + clientSecret;
+			String basicAuth = "Basic " + javax.xml.bind.DatatypeConverter.printBase64Binary(userpass.getBytes());
+
+			getTokenConnection.setRequestProperty("Authorization", basicAuth);
+
+			OutputStream os = getTokenConnection.getOutputStream();
+			os.write(getQuery(getTokenParams).getBytes("UTF-8"));
+			os.close();
+
+			if (getTokenConnection.getResponseCode() < 400) {
+				tokenResponseReader = new BufferedReader(new InputStreamReader(getTokenConnection.getInputStream()));
+				String inputLine;
+				StringBuffer sb = new StringBuffer();
+				while ((inputLine = tokenResponseReader.readLine()) != null) {
+					sb.append(inputLine);
+				}
+
+				tokenJson = new JSONObject(sb.toString());
+			} else {
+				tokenResponseReader = new BufferedReader(new InputStreamReader(getTokenConnection.getErrorStream()));
+				String inputLine;
+				while ((inputLine = tokenResponseReader.readLine()) != null) {
+					ew.synchronizedLog(EventWriter.ERROR, "Carvoyant Refresh Token Error: " + inputLine);
+				}
+			}
+
+			getTokenConnection.disconnect();
+		} catch (MalformedURLException mue) {
+			ew.synchronizedLog(EventWriter.ERROR, "Carvoyant Refresh Token Error: " + mue.getMessage());
+		} catch (IOException ioe) {
+			ew.synchronizedLog(EventWriter.ERROR, "Carvoyant Refresh Token Error: " + ioe.getMessage());
+		} finally {
+			if (null != getTokenConnection) {
+				getTokenConnection.disconnect();
+			}
+		}
+
+		return tokenJson;
 	}
 
 	private String getQuery(List<SimpleEntry> params) throws UnsupportedEncodingException {
