@@ -64,6 +64,11 @@
 						The refresh token for the specified access token.
 					</key>
 				</element>
+				<element name="expirationDate" type="textfield" label="Expiration Date">
+					<view name="list" />
+					<view name="edit" />
+					<view name="create" />
+				</element>
 			</elements>
 		</element>
 

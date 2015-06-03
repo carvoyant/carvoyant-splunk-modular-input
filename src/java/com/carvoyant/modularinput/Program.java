@@ -137,10 +137,9 @@ public class Program extends Script {
 
 					// Update this configuration with the new settings
 					String[] splunkApiInputName = inputName.split("://");
-					updateInput(ew, inputs.getSessionKey(), splunkApiInputName[1], clientId, clientSecret, token, refreshToken, expirationDate);
+					updateInput(ew, inputs.getServerUri(), inputs.getSessionKey(), splunkApiInputName[1], clientId, clientSecret, token, refreshToken, expirationDate);
 				} else {
-					ew.synchronizedLog(EventWriter.ERROR, "Cannot refresh token for " + inputName);
-					throw new XMLStreamException("Could not refresh the token for " + inputName);
+					throw new XMLStreamException("Cannot not refresh the token for " + inputName);
 				}
 			}
 
@@ -170,8 +169,8 @@ public class Program extends Script {
 						event.setData(arr.getJSONObject(i).toString());
 						ew.writeEvent(event);
 					}
-
 				}
+
 				in.close();
 			} catch (IOException ioe) {
 				throw new XMLStreamException("Could not retrieve Carvoyant Data", ioe);
@@ -182,11 +181,18 @@ public class Program extends Script {
 	}
 
 	// Updates the specified carvoyantModularInput through using the Splunk SDK
-	private void updateInput(EventWriter ew, String sessionKey, String inputName, String clientId, String clientSecret, String token, String refreshToken, long expirationDate) {
+	private void updateInput(EventWriter ew, String serverUri, String sessionKey, String inputName, String clientId, String clientSecret, String token, String refreshToken, long expirationDate) {
 		ServiceArgs sa = new ServiceArgs();
-		sa.setHost("127.0.0.1");
-		sa.setPort(8089);
-		sa.setScheme("https");
+		
+		String[] serverUriTokens = serverUri.split("://");
+		String uriScheme = serverUriTokens[0];
+		serverUriTokens = serverUriTokens[1].split(":");
+		String uriHost = serverUriTokens[0];
+		String uriPort = serverUriTokens[1];
+		
+		sa.setScheme(uriScheme);
+		sa.setHost(uriHost);
+		sa.setPort(Integer.parseInt(uriPort));
 		sa.setToken("Splunk " + sessionKey);
 		Service service = Service.connect(sa);
 
@@ -249,12 +255,15 @@ public class Program extends Script {
 				}
 
 				tokenJson = new JSONObject(sb.toString());
+				ew.synchronizedLog(EventWriter.INFO, "Refreshed Carvoyant access token.");
 			} else {
 				tokenResponseReader = new BufferedReader(new InputStreamReader(getTokenConnection.getErrorStream()));
+				StringBuffer sb = new StringBuffer();
 				String inputLine;
 				while ((inputLine = tokenResponseReader.readLine()) != null) {
-					ew.synchronizedLog(EventWriter.ERROR, "Carvoyant Refresh Token Error: " + inputLine);
+					sb.append(inputLine);
 				}
+				ew.synchronizedLog(EventWriter.ERROR, "Carvoyant Refresh Token Error. CLIENT_ID:" + clientId + ", REFRESH_TOKEN:" + refreshToken + ",ERROR_MSG: " + sb.toString());
 			}
 
 			getTokenConnection.disconnect();
