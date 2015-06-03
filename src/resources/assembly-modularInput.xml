@@ -7,14 +7,14 @@
 	<fileSets>
 		<fileSet>
 			<outputDirectory>/</outputDirectory>
-			<directoryMode>750</directoryMode>
+			<directoryMode>755</directoryMode>
 			<includes>
 				<include>./</include>
 			</includes>
 		</fileSet>
 		<fileSet>
 			<outputDirectory>jars</outputDirectory>
-			<directoryMode>750</directoryMode>
+			<directoryMode>755</directoryMode>
 			<includes>
 				<include>./</include>
 			</includes>
@@ -30,7 +30,21 @@
 				<include>windows_x86_64</include>
 				<include>README</include>
 			</includes>
-			<directoryMode>0750</directoryMode>
+			<directoryMode>0755</directoryMode>
+		</fileSet>
+		<fileSet>
+			<includes>
+				<include>darwin_x86_64/**/*.sh</include>
+				<include>default/**/*.sh</include>
+				<include>metadata/**/*.sh</include>
+				<include>linux_x86/**/*.sh</include>
+				<include>linux_x86_64/**/*.sh</include>
+				<include>windows_x86/**/*.sh</include>
+				<include>windows_x86_64/**/*.sh</include>
+			</includes>
+			<fileMode>0755</fileMode>
+			<directoryMode>0755</directoryMode>
+			<lineEnding>unix</lineEnding>
 		</fileSet>
 		<fileSet>
 			<includes>
@@ -42,16 +56,19 @@
 				<include>windows_x86/**/*</include>
 				<include>windows_x86_64/**/*</include>
 			</includes>
-			<fileMode>0750</fileMode>
-			<directoryMode>0750</directoryMode>
+			<excludes>
+				<exclude>**/*.sh</exclude>
+			</excludes>
+			<fileMode>0644</fileMode>
+			<directoryMode>0755</directoryMode>
 			<lineEnding>unix</lineEnding>
 		</fileSet>
 		<fileSet>
 			<includes>
 				<include>README/*</include>
 			</includes>
-			<fileMode>0640</fileMode>
-			<directoryMode>0750</directoryMode>
+			<fileMode>0644</fileMode>
+			<directoryMode>0755</directoryMode>
 			<lineEnding>unix</lineEnding>
 		</fileSet>
 	</fileSets>
@@ -60,12 +77,12 @@
 			<source>${project.build.directory}/${pom.artifactId}-${pom.version}.jar</source>
 			<outputDirectory>jars</outputDirectory>
 			<destName>carvoyantModularInput.jar</destName>
-			<fileMode>0640</fileMode>
+			<fileMode>0644</fileMode>
 		</file>
 		<file>
 			<source>${project.build.directory}/lib/splunk-1.4.0.0.jar</source>
 			<outputDirectory>jars</outputDirectory>
-			<fileMode>0640</fileMode>
+			<fileMode>0644</fileMode>
 		</file>
 	</files>
 </assembly>

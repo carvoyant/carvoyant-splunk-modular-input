@@ -14,40 +14,51 @@
 					<view name="list" />
 					<view name="create" />
 					<key name="exampleText">
-						Unique name which identifies this data input
+						Unique name which identifies this data input.
 					</key>
 				</element>
-				<element name="interval" type="textfield" label="Collection interval (in seconds)">
+				<element name="interval" type="textfield" label="Collection Interval">
 					<view name="list" />
 					<view name="edit" />
 					<view name="create" />
+					<key name="exampleText">
+						Polling interval for retrieving Carvoyant data (in seconds). Should be greater than 60.
+					</key>
 				</element>
 				<element name="clientId" type="textfield" label="Client Id">
 					<view name="list" />
 					<view name="edit" />
 					<view name="create" />
+					<key name="exampleText">
+						Carvoyant developer client id.
+					</key>
 				</element>
 				<element name="clientSecret" type="textfield" label="Client Secret">
 					<view name="list" />
 					<view name="edit" />
 					<view name="create" />
+					<key name="exampleText">
+						The client secret for your client id.
+					</key>
 				</element>
 				<element name="token" type="textfield" label="Access Token">
 					<view name="list" />
 					<view name="edit" />
 					<view name="create" />
+					<key name="exampleText">
+						An access token for authorizing your Client Id to your Carvoyant user account.
+					</key>
+					<key name="displayButton">True</key>
+					<key name="buttonLabel">Retrieve</key>
 				</element>
 				<element name="refreshToken" type="textfield" label="Refresh Token">
 					<view name="list" />
 					<view name="edit" />
 					<view name="create" />
+					<key name="exampleText">
+						The refresh token for the specified access token.
+					</key>
 				</element>
-				<element name="expirationDate" type="textfield" label="Expiration Date">
-					<view name="list" />
-					<view name="edit" />
-					<view name="create" />
-				</element>
-
 			</elements>
 		</element>
 
@@ -59,7 +70,7 @@
 				<element name="spl-ctrl_sourcetypeSelect" type="select"
 					label="Set sourcetype">
 					<onChange>
-						<!-- <key name="auto">NONE</key> -->
+						<key name="auto">NONE</key>
 						<key name="_action">showonly</key>
 						<group_set>
 							<group name="sourcetype" />
@@ -69,15 +80,15 @@
 						<key name="spl-ctrl_from_list">spl-ctrl_from_list</key>
 					</onChange>
 					<options>
-						<!-- <opt value="auto" label="Automatic"/> -->
+						<opt value="auto" label="Automatic"/>
 						<opt value="spl-ctrl_from_list" label="From list" />
 						<opt value="sourcetype" label="Manual" />
 					</options>
 					<view name="edit" />
 					<view name="create" />
-					<!-- <key name="exampleText">Set to automatic and Splunk will classify 
+					<key name="exampleText">Set to automatic and Splunk will classify 
 						and assign sourcetype automatically. Unknown sourcetypes will be given a 
-						placeholder name.</key> -->
+						placeholder name.</key>
 					<key name="processValueEdit">[[ e for e in ['sourcetype'] if form_defaults.get(e)
 						][0]]</key>
 					<key name="processValueAdd">[[ e for e in ['sourcetype'] if form_defaults.get(e)

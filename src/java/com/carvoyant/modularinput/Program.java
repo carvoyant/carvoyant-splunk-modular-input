@@ -66,6 +66,13 @@ public class Program extends Script {
 		Scheme scheme = new Scheme("Carvoyant Modular Input");
 		scheme.setDescription("Generates events containing Carvoyant vehicle information. Events will be generated from future Carvoyant data. Data in the Carvoyant system from prior to the creation of this input will not be transferred.");
 
+		Argument name = new Argument("name");
+		name.setDescription("name");
+		name.setDataType(Argument.DataType.STRING);
+		name.setRequiredOnCreate(true);
+		name.setRequiredOnEdit(false);
+		scheme.addArgument(name);
+
 		// Argument clientId = new Argument("clientId", "Client Id");
 		Argument clientId = new Argument("clientId");
 		clientId.setDescription("The Carvoyant Client Id for your Carvoyant developer account.");
@@ -190,22 +197,23 @@ public class Program extends Script {
 		sa.setScheme("https");
 		sa.setToken("Splunk " + sessionKey);
 		Service service = Service.connect(sa);
-		
-		// When authenticating using an existing session key, the Service object does
+
+		// When authenticating using an existing session key, the Service object
+		// does
 		// not initialize properly, so manually set the version.
 		service.version = service.getInfo().getVersion();
-		
+
 		InputCollection inputs = service.getInputs();
 		for (Input input : inputs.values()) {
 			if (input.getKind().toString().equals("carvoyantModularInput") && input.getName().equals(inputName)) {
-				
+
 				HashMap<String, Object> params = new HashMap<String, Object>();
-				params.put("clientId",  clientId);
-				params.put("clientSecret",  clientSecret);
-				params.put("token",  token);
-				params.put("refreshToken",  refreshToken);
+				params.put("clientId", clientId);
+				params.put("clientSecret", clientSecret);
+				params.put("token", token);
+				params.put("refreshToken", refreshToken);
 				params.put("expirationDate", expirationDate);
-				
+
 				input.update(params);
 			}
 		}
