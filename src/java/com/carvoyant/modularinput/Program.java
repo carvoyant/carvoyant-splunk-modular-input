@@ -73,7 +73,6 @@ public class Program extends Script {
 		name.setRequiredOnEdit(false);
 		scheme.addArgument(name);
 
-		// Argument clientId = new Argument("clientId", "Client Id");
 		Argument clientId = new Argument("clientId");
 		clientId.setDescription("The Carvoyant Client Id for your Carvoyant developer account.");
 		clientId.setDataType(Argument.DataType.STRING);
@@ -81,8 +80,6 @@ public class Program extends Script {
 		clientId.setRequiredOnEdit(true);
 		scheme.addArgument(clientId);
 
-		// Argument clientSecret = new Argument("clientSecret",
-		// "Client Secret");
 		Argument clientSecret = new Argument("clientSecret");
 		clientSecret.setDescription("The secret for the above Client Id.");
 		clientSecret.setDataType(Argument.DataType.STRING);
@@ -90,7 +87,6 @@ public class Program extends Script {
 		clientSecret.setRequiredOnEdit(true);
 		scheme.addArgument(clientSecret);
 
-		// Argument tokenArgument = new Argument("token", "Access Token");
 		Argument tokenArgument = new Argument("token");
 		tokenArgument.setDescription("The Carvoyant Access Token for your account (generated with the same Client Id specified above).");
 		tokenArgument.setDataType(Argument.DataType.STRING);
@@ -98,8 +94,6 @@ public class Program extends Script {
 		tokenArgument.setRequiredOnEdit(true);
 		scheme.addArgument(tokenArgument);
 
-		// Argument refreshTokenArgument = new Argument("refreshToken",
-		// "Refresh Token");
 		Argument refreshTokenArgument = new Argument("refreshToken");
 		refreshTokenArgument.setDescription("The Carvoyant Refresh Token for the above Access Token.");
 		refreshTokenArgument.setDataType(Argument.DataType.STRING);
@@ -107,13 +101,11 @@ public class Program extends Script {
 		refreshTokenArgument.setRequiredOnEdit(true);
 		scheme.addArgument(refreshTokenArgument);
 
-		// Argument expirationDate = new Argument("expirationDate",
-		// "Expiration Date (milliseconds from epoch)");
 		Argument expirationDate = new Argument("expirationDate");
 		expirationDate.setDescription("The expiration date of the Carvoyant Access Token. The modular input will manage this value.");
 		expirationDate.setDataType(Argument.DataType.STRING);
-		expirationDate.setRequiredOnCreate(true);
-		expirationDate.setRequiredOnEdit(true);
+		expirationDate.setRequiredOnCreate(false);
+		expirationDate.setRequiredOnEdit(false);
 		scheme.addArgument(expirationDate);
 
 		return scheme;
