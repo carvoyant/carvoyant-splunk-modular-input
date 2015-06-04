@@ -196,9 +196,10 @@ public class Program extends Script {
 		sa.setToken("Splunk " + sessionKey);
 		Service service = Service.connect(sa);
 
+		ew.synchronizedLog(EventWriter.INFO, "Getting info from " + service.getScheme() + "://" + service.getHost() + ":" + service.getPort());
+
 		// When authenticating using an existing session key, the Service object
-		// does
-		// not initialize properly, so manually set the version.
+		// does not initialize properly, so manually set the version.
 		service.version = service.getInfo().getVersion();
 
 		InputCollection inputs = service.getInputs();
