@@ -61,6 +61,27 @@ public class Program extends Script {
 	}
 
 	@Override
+    protected String stackTraceToLogEntry(Exception e) {
+        // Concatenate all the lines of the exception's stack trace with \\ between them.
+        StringBuilder sb = new StringBuilder();
+        
+        sb.append("\"");
+        sb.append(e.getClass().getName());
+        
+        if (e.getMessage() != null) {
+	        sb.append(": ");
+	        sb.append(e.getMessage());
+        }
+        
+        sb.append("\" at ");
+        for (StackTraceElement s : e.getStackTrace()) {
+            sb.append(s.toString());
+            sb.append("\\\\");
+        }
+        return sb.toString();
+    }
+
+	@Override
 	public Scheme getScheme() {
 
 		Scheme scheme = new Scheme("Carvoyant Modular Input");
