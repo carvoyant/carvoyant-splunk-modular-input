@@ -202,9 +202,13 @@ public class Program extends Script {
 		service.version = service.getInfo().getVersion();
 
 		InputCollection inputs = service.getInputs();
+		
+		ew.synchronizedLog(EventWriter.INFO, "Found " + inputs.size() + " inputs on " + service.getScheme() + "://" + service.getHost() + ":" + service.getPort());
+		
+		boolean updatedMI = false;
 		for (Input input : inputs.values()) {
 			if (input.getKind().toString().equals("carvoyantModularInput") && input.getName().equals(inputName)) {
-
+				ew.synchronizedLog(EventWriter.INFO, "Updating carvoyantModularInput://" + input.getName() + " with new token.");
 				HashMap<String, Object> params = new HashMap<String, Object>();
 				params.put("clientId", clientId);
 				params.put("clientSecret", clientSecret);
@@ -213,7 +217,14 @@ public class Program extends Script {
 				params.put("expirationDate", expirationDate);
 
 				input.update(params);
+				updatedMI = true;
 			}
+		}
+		
+		if (!updatedMI) {
+			ew.synchronizedLog(EventWriter.INFO, "Could not update carvoyantModularInput://" + inputName + " with new token.");
+		} else {
+			ew.synchronizedLog(EventWriter.INFO, "Updated carvoyantModularInput://" + inputName + " with new token.");
 		}
 	}
 
