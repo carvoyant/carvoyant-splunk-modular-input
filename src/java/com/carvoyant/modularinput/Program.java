@@ -43,6 +43,7 @@ import org.json.JSONObject;
 
 import com.splunk.Input;
 import com.splunk.InputCollection;
+import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
 import com.splunk.modularinput.Argument;
@@ -85,6 +86,7 @@ public class Program extends Script {
 	public Scheme getScheme() {
 
 		Scheme scheme = new Scheme("Carvoyant Modular Input");
+		scheme.setUseExternalValidation(false);
 		scheme.setDescription("Generates events containing Carvoyant vehicle information. Events will be generated from future Carvoyant data. Data in the Carvoyant system from prior to the creation of this input will not be transferred.");
 
 		Argument name = new Argument("name");
@@ -135,6 +137,8 @@ public class Program extends Script {
 	@Override
 	public void streamEvents(InputDefinition inputs, EventWriter ew) throws MalformedDataException, XMLStreamException, IOException {
 
+		Service splunkSvc = getService(inputs.getServerUri(), inputs.getSessionKey());
+		
 		for (String inputName : inputs.getInputs().keySet()) {
 			String clientId = ((SingleValueParameter) inputs.getInputs().get(inputName).get("clientId")).getValue();
 			String clientSecret = ((SingleValueParameter) inputs.getInputs().get(inputName).get("clientSecret")).getValue();
@@ -158,7 +162,7 @@ public class Program extends Script {
 
 					// Update this configuration with the new settings
 					String[] splunkApiInputName = inputName.split("://");
-					updateInput(ew, inputs.getServerUri(), inputs.getSessionKey(), splunkApiInputName[1], clientId, clientSecret, token, refreshToken, expirationDate);
+					updateInput(ew, splunkSvc, splunkApiInputName[1], clientId, clientSecret, token, refreshToken, expirationDate);
 				} else {
 					throw new XMLStreamException("Cannot not refresh the token for " + inputName);
 				}
@@ -201,8 +205,8 @@ public class Program extends Script {
 		}
 	}
 
-	// Updates the specified carvoyantModularInput through using the Splunk SDK
-	private void updateInput(EventWriter ew, String serverUri, String sessionKey, String inputName, String clientId, String clientSecret, String token, String refreshToken, long expirationDate) {
+	private Service getService(String serverUri, String sessionKey) {
+		Service service;
 		ServiceArgs sa = new ServiceArgs();
 		
 		String[] serverUriTokens = serverUri.split("://");
@@ -215,14 +219,27 @@ public class Program extends Script {
 		sa.setHost(uriHost);
 		sa.setPort(Integer.parseInt(uriPort));
 		sa.setToken("Splunk " + sessionKey);
-		Service service = Service.connect(sa);
+		try {
+	        Service.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
+			service = Service.connect(sa);
+	
+			// When authenticating using an existing session key, the Service object
+			// does not initialize properly, so manually set the version.
+			service.version = service.getInfo().getVersion();
+		} catch (RuntimeException re) {
+	        Service.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1);
+			service = Service.connect(sa);
+	
+			// When authenticating using an existing session key, the Service object
+			// does not initialize properly, so manually set the version.
+			service.version = service.getInfo().getVersion();
+		}
 
-		ew.synchronizedLog(EventWriter.INFO, "Getting info from " + service.getScheme() + "://" + service.getHost() + ":" + service.getPort());
-
-		// When authenticating using an existing session key, the Service object
-		// does not initialize properly, so manually set the version.
-		service.version = service.getInfo().getVersion();
-
+		return service;
+	}
+	
+	// Updates the specified carvoyantModularInput through using the Splunk SDK
+	private void updateInput(EventWriter ew, Service service, String inputName, String clientId, String clientSecret, String token, String refreshToken, long expirationDate) {
 		InputCollection inputs = service.getInputs();
 		
 		ew.synchronizedLog(EventWriter.INFO, "Found " + inputs.size() + " inputs on " + service.getScheme() + "://" + service.getHost() + ":" + service.getPort());
