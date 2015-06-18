@@ -9,60 +9,98 @@
 			<view name="list" />
 			<view name="edit" />
 			<view name="create" />
-			<key name="helpText">
-				Generates events containing Carvoyant vehicle information. Events will be
-				generated from future Carvoyant data. Data in the Carvoyant system
-				from prior to the creation of this input will not be transferred.
-			</key>
+			<key name="helpText">Generates events containing Carvoyant vehicle information. Events will be generated from future Carvoyant data. Data in the Carvoyant system from prior to the creation of this input will not be transferred.</key>
 			<elements>
 				<element name="name" label="Unique stanza name">
 					<view name="list" />
 					<view name="create" />
-					<key name="exampleText">
-						Unique name which identifies this data input.
-					</key>
+					<key name="exampleText">Unique name which identifies this data input.</key>
 				</element>
 				<element name="interval" type="textfield" label="Collection Interval">
 					<view name="list" />
 					<view name="edit" />
 					<view name="create" />
-					<key name="exampleText">
-						Polling interval for retrieving Carvoyant data (in
-						seconds). Should be greater than 60.
-					</key>
+					<key name="exampleText">Polling interval for retrieving Carvoyant data (in seconds). Should be greater than 60.</key>
 				</element>
 				<element name="clientId" type="textfield" label="Client Id">
 					<view name="list" />
 					<view name="edit" />
 					<view name="create" />
-					<key name="exampleText">
-						Carvoyant developer client id.
-					</key>
+					<key name="exampleText">Carvoyant developer client id.</key>
 				</element>
 				<element name="clientSecret" type="textfield" label="Client Secret">
 					<view name="list" />
 					<view name="edit" />
 					<view name="create" />
-					<key name="exampleText">
-						The client secret for your client id.
-					</key>
+					<key name="exampleText">The client secret for your client id.</key>
 				</element>
 				<element name="token" type="textfield" label="Access Token">
 					<view name="list" />
 					<view name="edit" />
 					<view name="create" />
-					<key name="exampleText">
-						An access token for authorizing your Client Id to
-						your Carvoyant user account.
+					<key name="exampleText">An access token for authorizing your Client Id to your Carvoyant user account.
+<![CDATA[<script>
+var oauthWindow;
+
+var authorizeUri = "https://auth.carvoyant.com/oauth/authorize";
+var redirectUri = "POST_MESSAGE";
+var tokenUri = "https://auth.carvoyant.com/oauth/tokenJson";
+
+$(document).ready(function () {
+  $("[name='spl-ctrl-token-button']").button()
+    .click(function (event) {
+    event.preventDefault();
+
+    var clientId = $("[name='clientId']").val();
+    var clientSecret = $("[name='clientSecret']").val();
+    var oauthUri = authorizeUri + "?redirect_uri=" + redirectUri + "&response_type=code" + "&client_id=" + clientId;
+
+	if (clientId == null || clientSecret == null) {
+		alert ("Client Id and Client Secret must be entered before generating an access token.");
+	} else {
+    	oauthWindow = window.open(oauthUri, "_blank", "height=400,width=350");
+	}
+  });
+
+  window.addEventListener('message', function (event) {
+    oauthWindow.close();
+
+    var clientId = $("[name='clientId']").val();
+    var clientSecret = $("[name='clientSecret']").val();
+
+    $.ajax({
+      type: "POST",
+      url: tokenUri,
+      data: {
+        "client_id": clientId,
+        "client_secret": clientSecret,
+        "code": event.data.code,
+        "redirect_uri": redirectUri
+      },
+      dataType: "jsonp",
+      jsonp: "callback",
+      jsonpCallback: "saveAccessToken"
+    });
+  });
+
+});
+
+function saveAccessToken(data) {
+  $("[name='token']").val(data.access_token);
+  $("[name='refreshToken']").val(data.refresh_token);
+  $("[name='expirationDate']").val(data.expires_in + (new Date()).getTime());
+
+}
+</script>]]>
 					</key>
+					<key name="displayButton">True</key>
+					<key name="buttonLabel">Retrieve</key>
 				</element>
 				<element name="refreshToken" type="textfield" label="Refresh Token">
 					<view name="list" />
 					<view name="edit" />
 					<view name="create" />
-					<key name="exampleText">
-						The refresh token for the specified access token.
-					</key>
+					<key name="exampleText">The refresh token for the specified access token.</key>
 				</element>
 				<element name="expirationDate" type="textfield" label="Expiration Date">
 					<view name="list" />
@@ -71,9 +109,7 @@
 				</element>
 			</elements>
 		</element>
-
-		<element name="spl-ctrl_EnableAdvanced" type="checkbox" label="More settings"
-			class="spl-mgr-advanced-switch">
+		<element name="spl-ctrl_EnableAdvanced" type="checkbox" label="More settings" class="spl-mgr-advanced-switch">
 			<view name="edit" />
 			<view name="create" />
 			<onChange>
@@ -94,8 +130,7 @@
 					<view name="edit" />
 					<view name="create" />
 					<elements>
-						<element name="spl-ctrl_sourcetypeSelect" type="select"
-							label="Set sourcetype">
+						<element name="spl-ctrl_sourcetypeSelect" type="select" label="Set sourcetype">
 							<onChange>
 								<key name="auto">NONE</key>
 								<key name="_action">showonly</key>
@@ -113,56 +148,26 @@
 							</options>
 							<view name="edit" />
 							<view name="create" />
-							<key name="exampleText">Set to automatic and Splunk will classify
-								and assign
-								sourcetype automatically. Unknown sourcetypes will be
-								given a
-								placeholder name.
-							</key>
-							<key name="processValueEdit">[[ e for e in ['sourcetype'] if
-								form_defaults.get(e)
-								][0]]
-							</key>
-							<key name="processValueAdd">[[ e for e in ['sourcetype'] if
-								form_defaults.get(e)
-								][0]]
-							</key>
+							<key name="exampleText">Set to automatic and Splunk will classify and assign sourcetype automatically. Unknown sourcetypes will be given a placeholder name.</key>
+							<key name="processValueEdit">[[ e for e in ['sourcetype'] if form_defaults.get(e) ][0]]</key>
+							<key name="processValueAdd">[[ e for e in ['sourcetype'] if form_defaults.get(e) ][0]]</key>
 						</element>
 						<element name="sourcetype" type="textfield" label="Source type">
 							<view name="list" />
 							<view name="edit" />
 							<view name="create" />
-							<key name="exampleText">If this field is left blank, the default value of
-								script will be used for the source type.
-							</key>
-							<key name="processValueList">_('script') if (value==None or value=='') else
-								value
-							</key>
-							<key name="submitValueAdd">form_data.get('spl-ctrl_from_list') if
-								form_data.get('spl-ctrl_sourcetypeSelect')=='spl-ctrl_from_list'
-								else value if
-								form_data.get('spl-ctrl_sourcetypeSelect')=='sourcetype' else
-								None
-							</key>
-							<key name="submitValueEdit">form_data.get('spl-ctrl_from_list') if
-								form_data.get('spl-ctrl_sourcetypeSelect')=='spl-ctrl_from_list'
-								else value if
-								form_data.get('spl-ctrl_sourcetypeSelect')=='sourcetype' else
-								None
-							</key>
+							<key name="exampleText">If this field is left blank, the default value of script will be used for the source type.</key>
+							<key name="processValueList">_('script') if (value==None or value=='') else value</key>
+							<key name="submitValueAdd">form_data.get('spl-ctrl_from_list') if form_data.get('spl-ctrl_sourcetypeSelect')=='spl-ctrl_from_list' else value if form_data.get('spl-ctrl_sourcetypeSelect')=='sourcetype' else None</key>
+							<key name="submitValueEdit">form_data.get('spl-ctrl_from_list') if form_data.get('spl-ctrl_sourcetypeSelect')=='spl-ctrl_from_list' else value if form_data.get('spl-ctrl_sourcetypeSelect')=='sourcetype' else None</key>
 							<key name="labelList">Source type</key>
 						</element>
-						<element name="spl-ctrl_from_list" type="select"
-							label="Select source type from list">
+						<element name="spl-ctrl_from_list" type="select" label="Select source type from list">
 							<view name="edit" />
 							<view name="create" />
-							<key name="exampleText">Splunk
-								classifies all common data types automatically, but if you're
-								looking for something specific, you can find more source types
-								in
-								the <![CDATA[<a href="../../../apps/remote">Splunkbase apps browser</a>]]>
-								or online at <![CDATA[<a href="http://www.splunkbase.com/" target="_blank">www.splunkbase.com</a>]]>.
-							</key>
+							<key name="exampleText">Splunk classifies all common data types automatically, but if you're looking for something specific, you can find more source types in the
+								<![CDATA[<a href="../../../apps/remote">Splunkbase apps browser</a>]]>or online at
+								<![CDATA[<a href="http://www.splunkbase.com/" target="_blank">www.splunkbase.com</a>]]>.</key>
 							<key name="requiredIfVisible" />
 							<key name="dynamicOptions" type="dict">
 								<key name="keyName">title</key>
@@ -182,8 +187,7 @@
 						</element>
 					</elements>
 					<key name="legend">Source type</key>
-					<key name="helpText">Set sourcetype field for all events from this source.
-					</key>
+					<key name="helpText">Set sourcetype field for all events from this source.</key>
 				</element>
 				<element name="hostFields" type="fieldset">
 					<key name="legend">Host</key>
@@ -222,8 +226,5 @@
 				</element>
 			</elements>
 		</element>
-
-
-
 	</elements>
 </endpoint>
