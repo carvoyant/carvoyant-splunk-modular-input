@@ -7,17 +7,26 @@
 	<fileSets>
 		<fileSet>
 			<outputDirectory>/</outputDirectory>
-			<directoryMode>755</directoryMode>
+			<directoryMode>0755</directoryMode>
 			<includes>
 				<include>./</include>
 			</includes>
 		</fileSet>
 		<fileSet>
 			<outputDirectory>jars</outputDirectory>
-			<directoryMode>755</directoryMode>
+			<directoryMode>0755</directoryMode>
 			<includes>
 				<include>./</include>
 			</includes>
+		</fileSet>
+		<fileSet>
+			<outputDirectory>/appserver</outputDirectory>
+			<directoryMode>0755</directoryMode>
+			<includes>
+				<include>static/**/*</include>
+			</includes>
+			<fileMode>0644</fileMode>
+			<directory>src/resources/</directory>
 		</fileSet>
 		<fileSet>
 			<includes>
