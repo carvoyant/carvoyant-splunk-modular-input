@@ -46,6 +46,10 @@ var authorizeUri = "https://auth.carvoyant.com/oauth/authorize";
 var redirectUri = "POST_MESSAGE";
 var tokenUri = "https://auth.carvoyant.com/oauth/tokenJson";
 
+//var authorizeUri = "https://sandbox-auth.carvoyant.com/oauth/authorize";
+//var redirectUri = "POST_MESSAGE";
+//var tokenUri = "https://sandbox-auth.carvoyant.com/oauth/tokenJson";
+
 $(document).ready(function () {
   $("[name='spl-ctrl-token-button']").button()
     .click(function (event) {
