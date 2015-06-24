@@ -48,8 +48,6 @@
 				<include>metadata/**/*.sh</include>
 				<include>linux_x86/**/*.sh</include>
 				<include>linux_x86_64/**/*.sh</include>
-				<include>windows_x86/**/*.sh</include>
-				<include>windows_x86_64/**/*.sh</include>
 			</includes>
 			<fileMode>0755</fileMode>
 			<directoryMode>0755</directoryMode>
@@ -62,6 +60,16 @@
 				<include>metadata/**/*</include>
 				<include>linux_x86/**/*</include>
 				<include>linux_x86_64/**/*</include>
+			</includes>
+			<excludes>
+				<exclude>**/*.sh</exclude>
+			</excludes>
+			<fileMode>0644</fileMode>
+			<directoryMode>0755</directoryMode>
+			<lineEnding>unix</lineEnding>
+		</fileSet>
+		<fileSet>
+			<includes>
 				<include>windows_x86/**/*</include>
 				<include>windows_x86_64/**/*</include>
 			</includes>
@@ -70,7 +78,6 @@
 			</excludes>
 			<fileMode>0644</fileMode>
 			<directoryMode>0755</directoryMode>
-			<lineEnding>unix</lineEnding>
 		</fileSet>
 		<fileSet>
 			<includes>
