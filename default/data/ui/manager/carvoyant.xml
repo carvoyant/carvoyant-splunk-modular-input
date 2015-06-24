@@ -59,7 +59,7 @@ $(document).ready(function () {
     var clientSecret = $("[name='clientSecret']").val();
     var oauthUri = authorizeUri + "?redirect_uri=" + redirectUri + "&response_type=code" + "&client_id=" + clientId;
 
-	if (clientId == null || clientSecret == null) {
+	if (clientId == null || clientSecret == null || clientId == "" || clientSecret == "") {
 		alert ("Client Id and Client Secret must be entered before generating an access token.");
 	} else {
     	oauthWindow = window.open(oauthUri, "_blank", "height=400,width=350");
