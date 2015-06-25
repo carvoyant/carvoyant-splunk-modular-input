@@ -33,16 +33,18 @@ def usage():
     sys.exit(2)
 
 def do_run():
-    xml_str = sys.stdin.read()
-    sys.argv.append(xml_str)
+# The Java SDK classes handle stdin directly so do not pass it as an argument
+#    xml_str = sys.stdin.read()
+#    sys.argv.append(xml_str)
     run_java()
 
 def do_scheme():
     run_java()
 
 def do_validate():
-    xml_str = sys.stdin.read()
-    sys.argv.append(xml_str)
+# The Java SDK classes handle stdin directly so do not pass it as an argument
+#    xml_str = sys.stdin.read()
+#    sys.argv.append(xml_str)
     run_java()
 
 def build_windows_classpath():
